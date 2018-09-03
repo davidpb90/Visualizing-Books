@@ -1,1 +1,3 @@
-# Visualizing-Books
+# Visualizing Books
+
+A project on book visualization.
