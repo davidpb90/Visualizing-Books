@@ -21,7 +21,7 @@ class FlowField {
   void init() {
     for(int i = 0; i < rows; i++) {
       for(int j = 0; j < rows; j++) {
-        String sentiment = table.getString(i, "sentiment");
+        String sentiment = table.getString(i*rows+j, "sentiment");
         // angle degrees in radians - from 0 to TWO_PI
         // sentiment dictionary: https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm
 
@@ -91,6 +91,9 @@ class FlowField {
   }
   
   PVector lookup(PVector lookup) {
+    //int resolution = 1;
+    //int cols = 1000;
+    //int rows = 1000;
     int column = int(constrain(lookup.x/resolution,0,cols-1));
     int row = int(constrain(lookup.y/resolution,0,rows-1));
     return field[column][row].get();
