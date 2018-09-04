@@ -1,47 +1,58 @@
 Table table;
 
-//float inc = 0.1;
-int xScale, yScale;
-int rows;
+Particle[] particle;
+FlowField flowfield;
 
-float[] pos_x;
-float[] pos_y;
+int tableRows;
+PGraphics pg;
 
 void setup() {
-  size(800, 800, P2D);
-  
+  size(displayHeight, displayHeight, P2D);
+  smooth(12);
   table = loadTable("first_data.csv", "header");
-  rows = table.getRowCount();
-  //println(rows);
+  tableRows = table.getRowCount();
   
-  pos_x = new float[rows];
-  pos_y = new float[rows];
-  
-  assignValues();
-}
-
-void assignValues() {
-  for(int i = 0; i < rows; i++) {
-    pos_x[i] = (i % width);
-    pos_y[i] = (i / width);
-  }
+  flowfield = new FlowField(tableRows, displayHeight);
 }
 
 void draw() {
-  background(0);
+  background(169);
+  translate(flowfield.centerField(), flowfield.centerField());
+  flowfield.display();
+}
 
-  for(int i = 0; i < rows; i++) {
-    //TableRow row = table.getRow(i);
-    //String sentiment = row.getString("genotype");
+void mousePressed() {
+  int d = day();
+  int mM = month();
+  int y = year();
+  int s = second();
+  int m = minute();
+  int h = hour();
+  
+  save("/Volumes/Apt Opt Out/02_Projecten/Visualizing Books/Visualizing-Books/03_Visualization/FirstDraft_Flow_Field/export/"+y+mM+d+"-"+h+m+s+".png");
+}
+
+// SETUP
+  //pos_x = new float[tableRows];
+  //pos_y = new float[tableRows];
+  
+  //rows = floor(sqrt(tableRows));
+  //cell = floor(gridSize/rows);
+
+// DRAW
+  //translate(82,82);
+  //for(int i = 0; i < tableRows; i++) {
+  //  //TableRow row = table.getRow(i);
+  //  //String sentiment = row.getString("genotype");
     
-    // PSEUDO CODE :: cell(sentiment, pos_x[i], pos_y[i]);
+  //  // PSEUDO CODE :: cell(sentiment, pos_x[i], pos_y[i]);
     
-    stroke(255, 0, 0, 100);
-    strokeWeight(1);
-    noFill();
-    //fill(255);
-    rect(pos_x[i], pos_y[i], 5, 5);
-  }
+  //  //stroke(255, 0, 0, 100);
+  //  //strokeWeight(1);
+  //  //noFill();
+  //  ////fill(255);
+  //  //rect(pos_x[i]*cell, pos_y[i]*cell, cell, cell);
+  //}
   
   //float yoff = 0;
   //for(int y = 0; y < rows; y++) {
@@ -58,4 +69,3 @@ void draw() {
   //  }
   //  yoff += inc;
   //}
-}
