@@ -70,7 +70,7 @@ class FlowField {
     for(int i = 0; i < rows; i++) {
       for(int j = 0; j < rows; j++) {
         //pushMatrix();
-        drawVector(field[i][j], i*cell, j*cell, cell-2);
+        drawVector(field[i][j], i*cell, j*cell, 1);
         //popMatrix();
       }
     }
@@ -90,9 +90,9 @@ class FlowField {
     popMatrix();
   }
   
-  PVector lookup(PVector lookup) {
-    int column = int(constrain(lookup.x/resolution,0,cols-1));
-    int row = int(constrain(lookup.y/resolution,0,rows-1));
-    return field[column][row].get();
-  }
+  //PVector lookup(PVector lookup) {
+  //  int column = int(constrain(lookup.x/resolution,0,cols-1));
+  //  int row = int(constrain(lookup.y/resolution,0,rows-1));
+  //  return field[column][row].get();
+  //}
 }
