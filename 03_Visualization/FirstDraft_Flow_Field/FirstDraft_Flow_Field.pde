@@ -20,13 +20,13 @@ void setup() {
   for(int i = 0; i < (tableRows/4); i++) {
     particles.add(new Particle(new PVector(random(height), random(height)), random(1, 4), random(0.1, 0.7)));
   }
-  background(255);
+  background(0);
 }
 
 void draw() {
   //background(169);
   noStroke();
-  fill(255, 0);
+  fill(0, 0);
   rect(0, 0, width, height);
   
   translate(flowfield.centerField(), flowfield.centerField());

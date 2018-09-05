@@ -50,7 +50,7 @@ class Particle {
   void display() {
     float theta = velocity.heading2D() + radians(90);
     noFill();
-    stroke(0, 10);
+    stroke(0, 0, 255, 20);
     strokeWeight(1);
     pushMatrix();
     

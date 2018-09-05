@@ -85,7 +85,7 @@ class FlowField {
       translate(x,y);
       rotate(v.heading2D());
 
-      stroke(0);
+      stroke(255);
       strokeWeight(1);
       
       line(0, 0, len, 0);
