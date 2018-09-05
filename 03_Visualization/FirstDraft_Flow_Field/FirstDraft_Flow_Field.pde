@@ -1,24 +1,48 @@
 Table table;
 
-Particle[] particle;
 FlowField flowfield;
+ArrayList<Particle> particles;
 
 int tableRows;
 PGraphics pg;
 
+boolean showFlowfield = false;
+
 void setup() {
-  size(displayHeight, displayHeight, P2D);
+  size(2000, 2000, P2D);
   smooth(12);
   table = loadTable("first_data.csv", "header");
   tableRows = table.getRowCount();
   
-  flowfield = new FlowField(tableRows, displayHeight);
+  flowfield = new FlowField(tableRows, height);
+  particles = new ArrayList<Particle>();
+  
+  for(int i = 0; i < (tableRows/4); i++) {
+    particles.add(new Particle(new PVector(random(height), random(height)), random(1, 4), random(0.1, 0.7)));
+  }
+  background(255);
 }
 
 void draw() {
-  background(169);
+  //background(169);
+  noStroke();
+  fill(255, 0);
+  rect(0, 0, width, height);
+  
   translate(flowfield.centerField(), flowfield.centerField());
-  flowfield.display();
+  
+  if(showFlowfield) flowfield.display();
+  
+  for (Particle p : particles) {
+    p.follow(flowfield);
+    p.run();
+  }
+}
+
+void keyPressed() {
+  if(key == ' ') {
+    showFlowfield = !showFlowfield;
+  }
 }
 
 void mousePressed() {
@@ -31,41 +55,3 @@ void mousePressed() {
   
   save("/Volumes/Apt Opt Out/02_Projecten/Visualizing Books/Visualizing-Books/03_Visualization/FirstDraft_Flow_Field/export/"+y+mM+d+"-"+h+m+s+".png");
 }
-
-// SETUP
-  //pos_x = new float[tableRows];
-  //pos_y = new float[tableRows];
-  
-  //rows = floor(sqrt(tableRows));
-  //cell = floor(gridSize/rows);
-
-// DRAW
-  //translate(82,82);
-  //for(int i = 0; i < tableRows; i++) {
-  //  //TableRow row = table.getRow(i);
-  //  //String sentiment = row.getString("genotype");
-    
-  //  // PSEUDO CODE :: cell(sentiment, pos_x[i], pos_y[i]);
-    
-  //  //stroke(255, 0, 0, 100);
-  //  //strokeWeight(1);
-  //  //noFill();
-  //  ////fill(255);
-  //  //rect(pos_x[i]*cell, pos_y[i]*cell, cell, cell);
-  //}
-  
-  //float yoff = 0;
-  //for(int y = 0; y < rows; y++) {
-  //  float xoff = 0;
-  //  for(int x = 0; x < cols; x++) {
-  //    //int index = x + y * width;
-      
-  //    float r = noise(xoff, yoff)*255;
-  //    xoff += inc;
-      
-  //    fill(r);
-  //    noStroke();
-  //    rect(x * _Scale, y * _Scale, _Scale, _Scale);
-  //  }
-  //  yoff += inc;
-  //}

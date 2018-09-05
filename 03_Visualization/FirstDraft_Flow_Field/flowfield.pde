@@ -5,23 +5,24 @@ class FlowField {
   float theta;
   
   FlowField(int toSquare, int sizetemp) {
+    gridSize = sizetemp;
+    
     rows = floor(sqrt(toSquare));
-    println(rows);
     cell = floor(sizetemp/rows);
-    println(cell);
+
     field = new PVector[rows][rows];
     init();
   }
   
   int centerField() {
-    return (displayHeight-(rows * cell))/2;
-    // (1050-(212*4))/2
+    return (height-(rows * cell))/2;
   }
   
   void init() {
     for(int i = 0; i < rows; i++) {
       for(int j = 0; j < rows; j++) {
-        String sentiment = table.getString(i, "sentiment");
+        
+        String sentiment = table.getString(i*rows+j, "sentiment");
         // angle degrees in radians - from 0 to TWO_PI
         // sentiment dictionary: https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm
 
@@ -60,8 +61,9 @@ class FlowField {
             theta = 0;
             break;
         }
+        
         field[i][j] = new PVector(cos(theta), sin(theta));
-        //field[i][j] = new PVector(i % rows, j / rows);
+
       }
     }
   }
@@ -69,30 +71,32 @@ class FlowField {
   void display() {
     for(int i = 0; i < rows; i++) {
       for(int j = 0; j < rows; j++) {
-        //pushMatrix();
-        drawVector(field[i][j], i*cell, j*cell, 1);
-        //popMatrix();
+        if(field[i][j].x != 0 && field[i][j].y != 0) drawVector(field[i][j], i*cell, j*cell, 3);
       }
     }
   }
   
   void drawVector(PVector v, float x, float y, float scayl) {
     pushMatrix();
-    float arrowsize = 4;
-    translate(x,y);
-    stroke(0);
-    strokeWeight(1);
-    rotate(v.heading2D());
-    float len = v.mag()*scayl;
-    line(0, 0, len, 0);
-    //line(len,0,len-arrowsize,+arrowsize/2);
-    //line(len,0,len-arrowsize,-arrowsize/2);
+    
+      float arrowsize = 4;
+      float len = v.mag()*scayl;
+
+      translate(x,y);
+      rotate(v.heading2D());
+
+      stroke(0);
+      strokeWeight(1);
+      
+      line(0, 0, len, 0);
+    
     popMatrix();
   }
   
-  //PVector lookup(PVector lookup) {
-  //  int column = int(constrain(lookup.x/resolution,0,cols-1));
-  //  int row = int(constrain(lookup.y/resolution,0,rows-1));
-  //  return field[column][row].get();
-  //}
+  PVector lookup(PVector lookup) {
+    int lookRow = int(constrain(lookup.x / cell, 0, rows-1));
+    int lookCol = int(constrain(lookup.y / cell, 0, rows-1));
+    //int row = int(constrain(lookup.y/resolution,0,rows-1));
+    return field[lookRow][lookCol].get();
+  }
 }
