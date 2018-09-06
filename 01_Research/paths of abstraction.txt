@@ -1,0 +1,1 @@
+book > chapters > paragraphs > lines > words > sentiment < color < average color of neighbor < force field < particle trajectories < chaos game
