@@ -1,5 +1,5 @@
 
-packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi")
+packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels")
 for(i in packages) {
   if(!require(i,character.only = TRUE)) install.packages(i)
   library(i,character.only = TRUE)
@@ -75,12 +75,72 @@ chapter_regex <- ""
 processed_kant <- process_book(link_kafka, skip_init_lines, skip_final_lines, chapter_regex, sentiment_dict, name)
 
 
+titles <- c("The Adventures of Sherlock Holmes",
+            "The Return of Sherlock Holmes",
+            "Flatland: A Romance of Many Dimensions",
+            "The Critique of Pure Reason",
+            "Around the World in Eighty Days",
+            "Don Quixote")
+
+books <- gutenberg_works(title %in% titles) %>%
+  gutenberg_download(meta_fields = "title")
+reg <- regex("^chapter ", ignore_case = TRUE)
+by_chapter <- books %>%
+  group_by(title) %>%
+  mutate(chapter = cumsum(str_detect(text, reg))) %>%
+  ungroup() %>%
+  filter(chapter > 0) %>%
+  unite(document, title, chapter)
+by_chapter_word <- by_chapter %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words)
+
+word_counts <- by_chapter_word %>% 
+  count(document, word, sort = TRUE) %>% 
+  ungroup()
+
+chapters_dtm <- word_counts %>%
+  cast_dtm(document, word, n)
+
+chapters_lda <- LDA(chapters_dtm, k = 10, control = list(seed = 1234))
+
+chapter_topics <- tidy(chapters_lda, matrix = "beta")
+
+top_terms <- chapter_topics %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term = reorder(term, beta)) %>% 
+  ggplot(aes(term, beta, fill = factor(topic))) + geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") + coord_flip()
+
+assignments <- augment(chapters_lda, data = chapters_dtm) %>% 
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE) %>% 
+  rename(word = term, freq_chapter = count)
+  
+final <- by_chapter_word %>% 
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE) %>% 
+  left_join(assignments) %>% 
+  group_by(title,word) %>% 
+  mutate(freq_book = n()) %>% 
+  ungroup()
+
+sentiment_dict <- "nrc"
+final_with_sentiments <- add_sentiments(final,sentiment_dict)
+write.csv(final_with_sentiments,file = paste(getwd(),"/Books/","with_sentiments_topics",".csv",sep=""))
+
+final_with_sent_clean <- final_with_sentiments %>% 
+  filter(!is.na(sentiment))
+write.csv(final_with_sent_clean,file = paste(getwd(),"/Books/","with_sentiments_topics_clean",".csv",sep=""))
 
 #adventures <- read_book(link_adventures, skip_init_lines,skip_final_lines)
 #tidied_book <- tidy_book(adventures, chapter_regex)
 #sentiment_book <- add_sentiments(tidy_book,sentiment_dict)
 
-
+unique(final$gutenberg_id)
 
 
 
