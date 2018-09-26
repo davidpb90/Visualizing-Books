@@ -1,4 +1,5 @@
 
+#' Imports required libraries. Installs them if required
 packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels")
 for(i in packages) {
   if(!require(i,character.only = TRUE)) install.packages(i)
@@ -6,6 +7,7 @@ for(i in packages) {
 }
 rm(packages, i)
 
+#' Sets working directory
 set_wd <- function() {
   #library(rstudioapi) # make sure you have it installed
   current_path <- getActiveDocumentContext()$path 
@@ -15,6 +17,19 @@ set_wd <- function() {
 set_wd()
 
 
+#' read_book: imports books from the Gutenberg project
+#'
+#' @param link Link to the book
+#' @param skip_init_lines Number of initial lines to skip (depends on the book)
+#' @param skip_final_lines Number of final lines to omit (most of the times it's the same)
+#'
+#' @return book: A tibble containing the book
+#' @export
+#'
+#' @examples link_adventures <- "https://ia800501.us.archive.org/27/items/theadventuresofs01661gut/pg1661.txt"
+#'skip_init_lines <- 57 
+#'skip_final_lines <- 364
+#'read_book(link_adventures,skip_init_lines,skip_final_lines)
 read_book <- function(link, skip_init_lines = 30,skip_final_lines = 364){
   book <- read_lines(link, skip = skip_init_lines) %>% 
     .[1:(length(.)-skip_final_lines)] %>% #Drops the final lines of the book
@@ -22,6 +37,17 @@ read_book <- function(link, skip_init_lines = 30,skip_final_lines = 364){
   return(book)
 }
 
+
+#' tidy_book: Returns a book in tidy format, i.e. one row per word, one column per variable. Stop words are removed
+#'
+#' @param book A tibble containing the book
+#' @param chapter_regex A regex to identify changes in chapter
+#'
+#' @return tidied_book: A book in tidy format
+#' @export
+#'
+#' @examples chapter_regex <- "^ADVENTURE"
+#' tidy_book(book, chapter_regex)
 tidy_book <- function(book,chapter_regex){
   tidied_book <- book %>% 
     data_frame(text=.) %>% 
@@ -32,12 +58,43 @@ tidy_book <- function(book,chapter_regex){
   return(tidied_book)
 }
 
+
+#' add_sentiments: Adds a column of sentiments to a tidy book
+#'
+#' @param tidy_book A book in tidy format
+#' @param sentiment_dict A dictionary for sentiment analysis
+#'
+#' @return sentiment_book: A book in tidy format with a column for sentiments
+#' @export 
+#'
+#' @examples sentiment_dict <- "nrc"
+#' add_sentiments(tidy_book,sentiment_dict)
 add_sentiments <- function(tidy_book,sentiment_dict){
   sentiments <- get_sentiments(sentiment_dict)
   sentiment_book <- tidy_book %>% 
   left_join(sentiments)
   return(sentiment_book)
 }
+
+#' process_book Imports a book, tidies it, includes sentiments and saves a csv version
+#'
+#' @param link_adventures Link to the book 
+#' @param skip_init_lines Number of initial lines to skip (depends on the book)
+#' @param skip_final_lines Number of final lines to omit (most of the times it's the same)
+#' @param chapter_regex A regex to identify changes in chapter
+#' @param sentiment_dict A dictionary for sentiment analysis
+#' @param name An alias for the final csv file
+#'
+#' @return processed_book: A processed book
+#' @export processed_book A csv file conatining the processed book
+#'
+#' @examples name <- "adventures_sherlock"
+#'link_adventures <- "https://ia800501.us.archive.org/27/items/theadventuresofs01661gut/pg1661.txt"
+#'skip_init_lines <- 57 
+#'skip_final_lines <- 364
+#'chapter_regex <- "^ADVENTURE" 
+#'sentiment_dict <- "nrc"
+#'processed_adventures <- process_book(link_adventures, skip_init_lines, skip_final_lines, chapter_regex, sentiment_dict, name)
 
 process_book <- function(link_adventures, skip_init_lines, skip_final_lines, chapter_regex, sentiment_dict, name){
   processed_book <- read_book(link_adventures, skip_init_lines,skip_final_lines) %>% 
@@ -47,6 +104,8 @@ process_book <- function(link_adventures, skip_init_lines, skip_final_lines, cha
   return(processed_book)
 }
   
+#### Examples
+
 name <- "adventures_sherlock"
 link_adventures <- "https://ia800501.us.archive.org/27/items/theadventuresofs01661gut/pg1661.txt"
 skip_init_lines <- 57 
@@ -136,6 +195,12 @@ final_with_sent_clean <- final_with_sentiments %>%
   filter(!is.na(sentiment))
 write.csv(final_with_sent_clean,file = paste(getwd(),"/Books/","with_sentiments_topics_clean",".csv",sep=""))
 
+devtools::install_github("bnosac/RDRPOSTagger")
+library("RDRPOSTagger")
+
+unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
+unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
+unipostags <- rdr_pos(unipostagger, tidied_book$word)
 #adventures <- read_book(link_adventures, skip_init_lines,skip_final_lines)
 #tidied_book <- tidy_book(adventures, chapter_regex)
 #sentiment_book <- add_sentiments(tidy_book,sentiment_dict)
