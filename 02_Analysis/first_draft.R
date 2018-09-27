@@ -1,6 +1,6 @@
 
 #' Imports required libraries. Installs them if required
-packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels")
+packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels","tokenizers","RDRPOSTagger")
 for(i in packages) {
   if(!require(i,character.only = TRUE)) install.packages(i)
   library(i,character.only = TRUE)
@@ -70,9 +70,10 @@ tidy_book <- function(book,chapter_regex){
 #' @examples sentiment_dict <- "nrc"
 #' add_sentiments(tidy_book,sentiment_dict)
 add_sentiments <- function(tidy_book,sentiment_dict){
-  sentiments <- get_sentiments(sentiment_dict)
+  sentiments <- get_sentiments(sentiment_dict) %>% 
+    filter(!(sentiment %in% c("negative","positive"))) 
   sentiment_book <- tidy_book %>% 
-  left_join(sentiments)
+  inner_join(sentiments)
   return(sentiment_book)
 }
 
@@ -134,25 +135,41 @@ chapter_regex <- ""
 processed_kant <- process_book(link_kafka, skip_init_lines, skip_final_lines, chapter_regex, sentiment_dict, name)
 
 
-titles <- c("The Adventures of Sherlock Holmes",
-            "The Return of Sherlock Holmes",
-            "Flatland: A Romance of Many Dimensions",
-            "The Critique of Pure Reason",
+titles <- c("The Critique of Pure Reason",
             "Around the World in Eighty Days",
             "Don Quixote")
 
+##"The Adventures of Sherlock Holmes",
+##"The Return of Sherlock Holmes",
+##"Flatland: A Romance of Many Dimensions",
+
+#'Reads books by name
 books <- gutenberg_works(title %in% titles) %>%
   gutenberg_download(meta_fields = "title")
+
+#'What books do we have?
+unique(books[c("gutenberg_id","title")])
+#gutenberg_id title                          
+#                          
+# 103 Around the World in Eighty Days
+# 996 Don Quixote                    
+# 4280 The Critique of Pure Reason    
+
+#'Regex to detect chapter
 reg <- regex("^chapter ", ignore_case = TRUE)
+
+#'Subdivides in chapters
 by_chapter <- books %>%
   group_by(title) %>%
   mutate(chapter = cumsum(str_detect(text, reg))) %>%
   ungroup() %>%
   filter(chapter > 0) %>%
   unite(document, title, chapter)
+
 by_chapter_word <- by_chapter %>%
   unnest_tokens(word, text) %>% 
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  add_sentiments(sentiment_dict)
 
 word_counts <- by_chapter_word %>% 
   count(document, word, sort = TRUE) %>% 
@@ -187,6 +204,17 @@ final <- by_chapter_word %>%
   mutate(freq_book = n()) %>% 
   ungroup()
 
+final_around <- final %>% filter(gutenberg_id == 103)
+write.csv(final_around,file = paste(getwd(),"/Books/","around_with_sentiments_topics",".csv",sep=""))
+
+final_quixote <- final %>% filter(gutenberg_id == 996)
+write.csv(final_quixote,file = paste(getwd(),"/Books/","quixote_with_sentiments_topics",".csv",sep=""))
+
+final_reason <- final %>% filter(gutenberg_id == 4280)
+write.csv(final_reason,file = paste(getwd(),"/Books/","reason_with_sentiments_topics",".csv",sep=""))
+
+
+
 sentiment_dict <- "nrc"
 final_with_sentiments <- add_sentiments(final,sentiment_dict)
 write.csv(final_with_sentiments,file = paste(getwd(),"/Books/","with_sentiments_topics",".csv",sep=""))
@@ -198,9 +226,44 @@ write.csv(final_with_sent_clean,file = paste(getwd(),"/Books/","with_sentiments_
 devtools::install_github("bnosac/RDRPOSTagger")
 library("RDRPOSTagger")
 
+
+#' POS_tagging Part of speech tagging for a given book
+#'
+#' @param book A book separated by lines
+#'
+#' @return tags A dataframe containing the POS tag for each token in the original text
+#' @export tags A csv version of the tags dataframe
+#'
+#' @examples
+pos_tagging <- function(book){
+  #reg <- regex("^chapter ", ignore_case = TRUE)
+  tidied_book <- book %>% 
+    paste(.$text, collapse = " ") %>% 
+    tokenize_sentences(simplify = TRUE) #%>% 
+    #{if(reg != "") mutate(.,chapter = cumsum(str_detect(.$text, regex(reg,ignore_case = TRUE)))) else .} %>% 
+    #mutate(linenumber = row_number()) %>% 
+    #unnest_tokens(word,text,token = "sentences")
+  unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
+  unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
+  unipostags <- rdr_pos(unipostagger, tidied_book$word)
+  unipostags$pos <- unipostag_types[unipostags$pos]
+  write.csv(unipost_tags,file = paste(getwd(),"/Books/","80_days_pos",".csv",sep=""))
+  return(tags)
+}
+#Tagging: 103 Around the World in Eighty Days
+around_the_world <- books[books$gutenberg_id == 103,]
+around_tags <- pos_tagging(around_the_world)
+
+quixote <- books[books$gutenberg_id == 996,]
+quixote_tags <- pos_tagging(quixote)
+
+
 unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
 unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
 unipostags <- rdr_pos(unipostagger, tidied_book$word)
+unipostags$pos <- unipostag_types[unipostags$pos]
+
+write.csv(unipostags %>% filter(!is.na(pos)),file = paste(getwd(),"/Books/","adventures_pos",".csv",sep=""))
 #adventures <- read_book(link_adventures, skip_init_lines,skip_final_lines)
 #tidied_book <- tidy_book(adventures, chapter_regex)
 #sentiment_book <- add_sentiments(tidy_book,sentiment_dict)
