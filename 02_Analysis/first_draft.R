@@ -230,6 +230,7 @@ library("RDRPOSTagger")
 #' POS_tagging Part of speech tagging for a given book
 #'
 #' @param book A book separated by lines
+#' @param name Name for the csv file
 #'
 #' @return tags A dataframe containing the POS tag for each token in the original text
 #' @export tags A csv version of the tags dataframe
@@ -237,17 +238,25 @@ library("RDRPOSTagger")
 #' @examples
 pos_tagging <- function(book){
   #reg <- regex("^chapter ", ignore_case = TRUE)
-  tidied_book <- book %>% 
-    paste(.$text, collapse = " ") %>% 
-    tokenize_sentences(simplify = TRUE) #%>% 
-    #{if(reg != "") mutate(.,chapter = cumsum(str_detect(.$text, regex(reg,ignore_case = TRUE)))) else .} %>% 
-    #mutate(linenumber = row_number()) %>% 
-    #unnest_tokens(word,text,token = "sentences")
   unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
   unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
-  unipostags <- rdr_pos(unipostagger, tidied_book$word)
-  unipostags$pos <- unipostag_types[unipostags$pos]
-  write.csv(unipost_tags,file = paste(getwd(),"/Books/","80_days_pos",".csv",sep=""))
+  tags <- book %>% 
+    #paste(.$text, collapse = " ") %>% 
+    #tokenize_sentences(simplify = TRUE) #%>% 
+    {if(reg != "") mutate(.,chapter = cumsum(str_detect(.$text, regex(reg,ignore_case = TRUE)))) else .} %>% 
+    #mutate(linenumber = row_number()) #%>% 
+    group_by_at(vars(-text)) %>% 
+    summarise(text = paste(text, collapse = " ")) %>% 
+    filter(chapter != 0,!is.na(text)) %>% 
+    unnest_tokens(word,text,token = "sentences") %>%
+    ungroup() %>% 
+    group_by_at(vars(-word)) %>% 
+    do(rdr_pos(unipostagger,.$word)) %>% #summarise used the full 
+    ungroup() %>%
+    mutate(pos=unipostag_types[pos]) %>% 
+    filter(!is.na(pos))
+    
+  write.csv(tags,file = paste(getwd(),"/Books/",deparse(substitute(book)),".csv",sep=""))
   return(tags)
 }
 #Tagging: 103 Around the World in Eighty Days
@@ -256,6 +265,37 @@ around_tags <- pos_tagging(around_the_world)
 
 quixote <- books[books$gutenberg_id == 996,]
 quixote_tags <- pos_tagging(quixote)
+
+reason <- books[books$gutenberg_id == 4280,]
+reason_tags <- pos_tagging(reason)
+
+
+reg <- regex("^chapter ", ignore_case = TRUE)
+tidied_book <- around_the_world %>% 
+  #paste(.$text, collapse = " ") %>% 
+  #tokenize_sentences(simplify = TRUE) #%>% 
+  {if(reg != "") mutate(.,chapter = cumsum(str_detect(.$text, regex(reg,ignore_case = TRUE)))) else .} %>% 
+  #mutate(linenumber = row_number()) #%>% 
+  group_by_at(vars(-text)) %>% 
+  summarise(text = paste(text, collapse = " ")) %>% 
+  filter(chapter != 0,!is.na(text)) %>% 
+  unnest_tokens(word,text,token = "sentences") %>%
+  ungroup() #%>% 
+final <- tidied_book %>% 
+  filter(chapter <= 2)  %>% 
+  group_by_at(vars(-word)) %>% 
+  do(rdr_pos(unipostagger,.$word)) %>% 
+  ungroup() %>% 
+  mutate(pos=unipostag_types[pos]) %>% 
+  filter(!is.na(pos))
+
+final$pos <- unipostag_types[final$pos]
+
+
+
+a <- tokenize_sentences(tidied_book$full_text[2],simplify = TRUE)
+
+
 
 
 unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
@@ -269,6 +309,8 @@ write.csv(unipostags %>% filter(!is.na(pos)),file = paste(getwd(),"/Books/","adv
 #sentiment_book <- add_sentiments(tidy_book,sentiment_dict)
 
 unique(final$gutenberg_id)
+
+assign("last.warning", NULL, envir = baseenv())
 
 
 
