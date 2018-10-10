@@ -25,18 +25,20 @@ class Particle {
   }
 
   void follow(FlowField flow) {
-    PVector desired = flow.lookup(position);
+    PVector desired = flow.lookup_position(position);
+    float mass = flow.lookup_mass(position);
 
     desired.mult(maxspeed);
 
     PVector steer = PVector.sub(desired, velocity);
     steer.limit(maxforce);
-    applyForce(steer);
+    applyForce(steer, mass);
   }
 
-  void applyForce(PVector force) {
+  void applyForce(PVector force, float mass) {
     // We could add mass here if we want A = F / M
-    acceleration.add(force);
+    PVector f = PVector.div(force, mass);
+    acceleration.add(f);
   }
 
   void update() {
