@@ -256,7 +256,7 @@ pos_tagging <- function(book){
     mutate(pos=unipostag_types[pos]) %>% 
     filter(!is.na(pos))
     
-  write.csv(tags,file = paste(getwd(),"/Books/",deparse(substitute(book)),".csv",sep=""))
+  write.csv(tags,file = paste(getwd(),"/Books/",deparse(substitute(book)),"_pos.csv",sep=""))
   return(tags)
 }
 #Tagging: 103 Around the World in Eighty Days

@@ -8,8 +8,8 @@ PGraphics pg;
 
 boolean showFlowfield = false;
 
-String[] books = new String[5];
-int num = 4;
+String[] books = new String[6];
+int num_book = 5;
 
 int time = millis();
 
@@ -21,8 +21,9 @@ void setup() {
   books[2] = "flatland";
   books[3] = "kafka";
   books[4] = "kant";
+  books[5] = "around_with_sentiments_topics";
 
-  table = loadTable(books[num]+".csv", "header");
+  table = loadTable(books[num_book]+".csv", "header");
   tableRows = table.getRowCount();
   
   flowfield = new FlowField(tableRows, height);
@@ -74,5 +75,6 @@ void mousePressed() {
   int m = minute();
   int h = hour();
   
-  save("/Volumes/Apt Opt Out/02_Projecten/Visualizing Books/Visualizing-Books/03_Visualization/FirstDraft_Flow_Field/export/"+books[num]+"-"+y+mM+d+"-"+h+m+s+".png");
+  //save("/Volumes/Apt Opt Out/02_Projecten/Visualizing Books/Visualizing-Books/03_Visualization/FirstDraft_Flow_Field/export/"+books[num_book]+"-"+y+mM+d+"-"+h+m+s+".png");
+  save("export/"+books[num_book]+"-"+y+mM+d+"-"+h+m+s+".png");
 }

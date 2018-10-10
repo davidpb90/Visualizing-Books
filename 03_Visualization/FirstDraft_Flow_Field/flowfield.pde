@@ -3,6 +3,7 @@ class FlowField {
   PVector[][] field;
   int cell, rows, gridSize;
   float theta;
+  float[][] mass;
   
   FlowField(int toSquare, int sizetemp) {
     gridSize = sizetemp;
@@ -11,6 +12,8 @@ class FlowField {
     cell = floor(sizetemp/rows);
 
     field = new PVector[rows][rows];
+    mass = new float[rows][rows];
+    
     init();
   }
   
@@ -23,6 +26,7 @@ class FlowField {
       for(int j = 0; j < rows; j++) {
         
         String sentiment = table.getString(i*rows+j, "sentiment");
+        float current_mass = Float.valueOf(table.getString(i*rows+j, "freq_book"));
         // angle degrees in radians - from 0 to TWO_PI
         // sentiment dictionary: https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm
 
@@ -63,7 +67,7 @@ class FlowField {
         }
         
         field[i][j] = new PVector(cos(theta), sin(theta));
-
+        mass[i][j] = current_mass;
       }
     }
   }
@@ -93,10 +97,17 @@ class FlowField {
     popMatrix();
   }
   
-  PVector lookup(PVector lookup) {
+  PVector lookup_position(PVector lookup) {
     int lookRow = int(constrain(lookup.x / cell, 0, rows-1));
     int lookCol = int(constrain(lookup.y / cell, 0, rows-1));
     //int row = int(constrain(lookup.y/resolution,0,rows-1));
     return field[lookRow][lookCol].get();
+  }
+  
+  float lookup_mass(PVector lookup) {
+    int lookRow = int(constrain(lookup.x / cell, 0, rows-1));
+    int lookCol = int(constrain(lookup.y / cell, 0, rows-1));
+    //int row = int(constrain(lookup.y/resolution,0,rows-1));
+    return mass[lookRow][lookCol];
   }
 }
