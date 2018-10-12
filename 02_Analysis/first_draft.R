@@ -1,6 +1,6 @@
 
 #' Imports required libraries. Installs them if required
-packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels","tokenizers","RDRPOSTagger")
+packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels","tokenizers","RDRPOSTagger","ggplot2")
 for(i in packages) {
   if(!require(i,character.only = TRUE)) install.packages(i)
   library(i,character.only = TRUE)
@@ -74,6 +74,24 @@ add_sentiments <- function(tidy_book,sentiment_dict){
     filter(!(sentiment %in% c("negative","positive"))) 
   sentiment_book <- tidy_book %>% 
   inner_join(sentiments)
+  return(sentiment_book)
+}
+
+#' add_sentiments: Adds a column of sentiments to a tidy book
+#'
+#' @param tidy_book A book in tidy format
+#' @param sentiment_dict A dictionary for sentiment analysis
+#'
+#' @return sentiment_book: A book in tidy format with a column for sentiments
+#' @export 
+#'
+#' @examples sentiment_dict <- "nrc"
+#' add_sentiments(tidy_book,sentiment_dict)
+add_sentiments_bin <- function(tidy_book,sentiment_dict){
+  sentiments <- get_sentiments(sentiment_dict) %>% 
+    filter(sentiment %in% c("negative","positive")) 
+  sentiment_book <- tidy_book %>% 
+    inner_join(sentiments,c("word")) 
   return(sentiment_book)
 }
 
@@ -168,12 +186,19 @@ by_chapter <- books %>%
 
 by_chapter_word <- by_chapter %>%
   unnest_tokens(word, text) %>% 
+  mutate(token_id = row_number()) %>% 
   anti_join(stop_words) %>% 
-  add_sentiments(sentiment_dict)
+  add_sentiments(sentiment_dict) %>% 
+  add_sentiments_bin(sentiment_dict) %>% 
+  rename(sentiment = sentiment.x, sentiment_bin = sentiment.y)#Will give more weight to words with more sentiments
+  #count(document, word, sort = FALSE) %>% 
+  #ungroup()# %>% 
+ 
 
 word_counts <- by_chapter_word %>% 
-  count(document, word, sort = TRUE) %>% 
+  count(document, word) %>% 
   ungroup()
+
 
 chapters_dtm <- word_counts %>%
   cast_dtm(document, word, n)
@@ -198,6 +223,8 @@ assignments <- augment(chapters_lda, data = chapters_dtm) %>%
   rename(word = term, freq_chapter = count)
   
 final <- by_chapter_word %>% 
+  left_join(word_counts) %>% 
+  rename(freq_chapter = n) %>% 
   separate(document, c("title", "chapter"), sep = "_", convert = TRUE) %>% 
   left_join(assignments) %>% 
   group_by(title,word) %>% 
@@ -240,6 +267,7 @@ pos_tagging <- function(book){
   #reg <- regex("^chapter ", ignore_case = TRUE)
   unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
   unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
+  reg <- regex("^chapter ", ignore_case = TRUE)
   tags <- book %>% 
     #paste(.$text, collapse = " ") %>% 
     #tokenize_sentences(simplify = TRUE) #%>% 
@@ -253,15 +281,21 @@ pos_tagging <- function(book){
     group_by_at(vars(-word)) %>% 
     do(rdr_pos(unipostagger,.$word)) %>% #summarise used the full 
     ungroup() %>%
-    mutate(pos=unipostag_types[pos]) %>% 
-    filter(!is.na(pos))
+    mutate(pos=unipostag_types[pos])
+    #filter(!is.na(pos))
     
   write.csv(tags,file = paste(getwd(),"/Books/",deparse(substitute(book)),"_pos.csv",sep=""))
   return(tags)
 }
 #Tagging: 103 Around the World in Eighty Days
 around_the_world <- books[books$gutenberg_id == 103,]
-around_tags <- pos_tagging(around_the_world)
+around_tags <- pos_tagging(around_the_world)  
+around_joined <- around_tags %>%   
+  select(-c(doc_id,token_id)) %>% 
+  rename(word = token) %>% 
+  left_join(final_around)
+write.csv(around_joined,file = paste(getwd(),"/Books/final_around_the_world.csv",sep=""))
+
 
 quixote <- books[books$gutenberg_id == 996,]
 quixote_tags <- pos_tagging(quixote)
@@ -291,7 +325,21 @@ final <- tidied_book %>%
 
 final$pos <- unipostag_types[final$pos]
 
-
+###Current Test
+unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb", "AUX" = "auxiliary", "CONJ" = "coordinating conjunction", "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun", "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun", "PROPN" = "proper noun", "PUNCT" = "punctuation", "SCONJ" = "subordinating conjunction", "SYM" = "symbol", "VERB" = "verb", "X" = "other")
+unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
+test <- around_the_world %>% 
+  {if(reg != "") mutate(.,chapter = cumsum(str_detect(.$text, regex(reg,ignore_case = TRUE)))) else .} %>% 
+  mutate(linenumber = row_number()) %>% 
+  filter(chapter != 0,!is.na(text),text != "") %>% 
+  unnest_tokens(word,text,token = "sentences") %>%
+  ungroup() %>% 
+  filter(chapter == 3) %>% print(n = Inf) #%>% 
+  group_by_at(vars(-word)) %>% 
+  do(rdr_pos(unipostagger,.$word)) %>% 
+  ungroup() %>% 
+  mutate(pos=unipostag_types[pos]) %>% 
+  select(-c(doc_id,token_id))
 
 a <- tokenize_sentences(tidied_book$full_text[2],simplify = TRUE)
 
