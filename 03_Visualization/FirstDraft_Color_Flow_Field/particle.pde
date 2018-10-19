@@ -85,8 +85,8 @@ class Particle {
   // c = c + a*d*c1
   color colorInfluence(float a, float dist, float colInflu) {
     float currentColor = 0;
-    // HSB mode
-    return color(currentColor + a * dist * colInflu, 255, 255);
+    float alphaConst = sentimentStrength; 
+    NextParticleColor = currentColor + a * (CurrentFieldColor - currentColor);
   }
 
   // Torus topology making each particle re-appear on the other end of the canvas when exiting
