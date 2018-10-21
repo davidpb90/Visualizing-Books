@@ -1,5 +1,12 @@
 03_Visualization/FirstDraft_Flow_Field/export/first-data frames/**
 
+# AWS info
+aws_info.json
+*.pem
+credentials.csv
+set_up_psql.md
+
+
 # General
 .DS_Store
 .AppleDouble
@@ -27,3 +34,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
