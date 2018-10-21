@@ -8,6 +8,7 @@ class Particle {
   boolean print_this = true;
   float borderSize = flowfield.centerField() * 2;
   float gridHeightMargin = height - borderSize;
+  float mass;
 
     Particle(PVector l, float ms, float mf) {
     position = l.get();
@@ -18,15 +19,15 @@ class Particle {
     velocity = new PVector(0,0);
   }
 
-  void run() {
+  void run(FlowField flow) {
     update();
     borders();
-    display();
+    display(flow);
   }
 
   void follow(FlowField flow) {
     PVector desired = flow.lookup_position(position);
-    float mass = map(flow.lookup_mass(position), 0, 200, 0, 100);
+    mass = map(flow.lookup_mass(position), 0, 200, 0, 50);
 
     desired.mult(maxspeed);
 
@@ -37,8 +38,8 @@ class Particle {
 
   void applyForce(PVector force, float mass) {
     // We could add mass here if we want A = F / M
-    PVector f = PVector.div(force, mass);
-    acceleration.add(f);
+    //PVector f = PVector.div(force, 1);
+    acceleration.add(force);
     
     //if(print_this) {
     //  println(force, mass);
@@ -54,13 +55,18 @@ class Particle {
     acceleration.mult(0);
   }
 
-  void display() {
-    //float theta = velocity.heading2D() + radians(90);
-    noFill();
-    stroke(255, 255, 255, 10);
-    strokeWeight(2);
+  void display(FlowField flow) {
     pushMatrix();
+      noStroke();
+      fill(255, 90);
+      textAlign(CENTER);
+      //textSize(14);
       translate(position.x, position.y);
+      text(flow.lookup_sentiment(position).toUpperCase(), 0, 0); 
+      noFill();
+      stroke(255, 255, 255, 255);
+
+      strokeWeight(6);
       point(0, 0);
     popMatrix();
   }

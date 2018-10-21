@@ -12,11 +12,15 @@ String[] books = new String[6];
 int num_book = 5;
 
 int time = millis();
+PFont mono;
 
 void setup() {
-  size(780, 780);
+  size(800, 800);
   //smooth(6);
   noCursor();
+  mono = createFont("DINPro-Bold.otf", 12);
+  textFont(mono);
+  
   books[0] = "first_data";
   books[1] = "adventures_sherlock";
   books[2] = "flatland";
@@ -30,16 +34,16 @@ void setup() {
   flowfield = new FlowField(tableRows, height);
   particles = new ArrayList<Particle>();
   
-  for(int i = 0; i < (tableRows/4); i++) {
-    particles.add(new Particle(new PVector(random(width),random(height)), random(2,4), random(0.2,2)));
+  for(int i = 0; i < (50); i++) {
+    particles.add(new Particle(new PVector(random(width),random(height)), random(1,4), random(0.01,0.5)));
   }
   background(0);
 }
 
 void draw() {
-  //background(169);
+  background(0);
   //noStroke();
-  //fill(0, 0);
+  //fill(0, 10);
   //rect(0, 0, width, height);
   
   translate(flowfield.centerField(), flowfield.centerField());
@@ -48,7 +52,7 @@ void draw() {
   
   for (Particle p : particles) {
     p.follow(flowfield);
-    p.run();
+    p.run(flowfield);
   }
   
   // Saving a frame after a certain determined time 
