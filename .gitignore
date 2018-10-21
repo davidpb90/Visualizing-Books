@@ -1,1 +1,5 @@
 03_Visualization/FirstDraft_Flow_Field/export/first-data frames/**
+aws_info.json
+*.pem
+credentials.csv
+set_up_psql.md
