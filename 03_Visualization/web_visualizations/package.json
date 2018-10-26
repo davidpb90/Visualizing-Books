@@ -1,0 +1,24 @@
+{
+  "name": "book-visualizations",
+  "version": "0.1.0",
+  "description": "Visualizing the growing complexity of language in each of its divisible parts (words, sentences, paragraphs, etc.).",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidpb90/Visualizing-Books.git"
+  },
+  "author": "David Pardo, Apt Opt Out",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/davidpb90/Visualizing-Books/issues"
+  },
+  "homepage": "https://github.com/davidpb90/Visualizing-Books#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "pg": "^7.5.0",
+    "pug": "^2.0.3"
+  }
+}
