@@ -1,4 +1,6 @@
 03_Visualization/FirstDraft_Flow_Field/export/first-data frames/**
+03_Visualization/web_visualizations/hidden/**
+03_Visualization/web_visualizations/node_modules/**
 
 # AWS info
 aws_info.json
@@ -14,7 +16,6 @@ set_up_psql.md
 
 # Icon must end with two \r
 Icon
-
 
 # Thumbnails
 ._*
