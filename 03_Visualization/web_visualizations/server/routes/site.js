@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../dbs');
+const pool = require('../dbs');
 
-// Home page route
-router.get('/', function (req, res) {
-    'use strict';
-    res.send('Hi globe!');
+router.get('/', function(req, res, next) {
+    client.query('SELECT *', function(err, result) {
+        if (err) {
+            throw new Error(err);
+        } else {
+            console.log(result.rows[0]);
+        }
+    });
 });
 
 module.exports = router;

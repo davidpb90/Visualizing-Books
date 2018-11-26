@@ -1,36 +1,17 @@
-const {Pool} = require('pg');
-const db_creds = require('./hidden/aws_info.js');
-const connection_string = db_creds.rds_details.connect_uri;
+const pg = require('pg');
+const db_creds = require('../../hidden/aws_info.js');
 
-// const config = {
-//     user: db_creds.rds_details.username,
-//     database: db_creds.rds.details.database,
-//     password: db_creds.rds.details.password,
-//     port: db_creds.rds.details.port,
-//     max: 10, // max number of connection can be open to database
-//     idleTimeoutMillis: 30000 // how long a client is allowed to remain idle before being closed
-// };
-
-const pool = new Pool({
-    connectionString: connection_string
+const pool = new pg.Pool({
+    user: db_creds.rds_details.username,
+    host: db_creds.rds_details.host,
+    database: db_creds.rds_details.database,
+    password: db_creds.rds_details.password,
+    port: db_creds.rds_details.port
 });
 
-let state = {
-    db: null
-};
-
-exports.connect = pool.connect(function (err, client, release) {
-    'use strict';
-    if (err) {
-        return console.error('Error acquiring client', err.stack);
-    }
-
-    client.query('SELECT NOW()', function (err, result) {
-        release();
-        if (err) {
-            return console.error('Error executing query', err.stack);
-        }
-
-        console.log(result.rows);
-    });
+pool.on('error', function(err, client) {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
 });
+
+module.exports = pool;
