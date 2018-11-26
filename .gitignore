@@ -4,6 +4,10 @@
 
 # AWS info
 aws_info.json
+aws_info.js
+
+**/hidden
+
 *.pem
 credentials.csv
 set_up_psql.md

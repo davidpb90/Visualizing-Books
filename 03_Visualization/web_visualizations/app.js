@@ -5,7 +5,7 @@ const db_creds = require('./hidden/aws_info.js');
 const site = require('./server/routes/site.js');
 const pool = require('./server/dbs');
 const app = express();
-const port = 3000;
+const port = 8000;
 
 app.set('view enging', 'pug');
 app.set('views', path.join(__dirname, 'client/views'));
