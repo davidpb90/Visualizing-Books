@@ -1,3 +1,27 @@
+/* GENERAL LAYOUTING */
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#layout {
+    width: 66%;
+    position: relative;
+    margin: 0 auto;
+}
+
+#wrapper {
+    width: 100%;
+    height: auto;
+
+    position: relative;
+    display: block;
+
+    margin: 0;
+    padding: 0;
+}
+
 #container {
     width: 66%;
     height: 2000px;
@@ -7,4 +31,37 @@
 
     margin: 0;
     padding: 0;
+}
+
+span {
+    display: inline-block;
+}
+
+
+/* TYPOGRAPHY */
+
+body {
+    font-family: helvetica;
+    font-size: 16px;
+    line-height: 1.5em;
+}
+
+h1 {
+    font-size: 48px;
+    line-height: 1.15em;
+}
+
+p {
+    font-weight: 600;
+}
+
+
+/* STYLING */
+
+[data-sentiment = "anger"] {
+    color: rgba(255, 0, 0, 1);
+}
+
+[data-pos = "punctuation"] {
+    color: rgba(0, 0, 255, 1);
 }

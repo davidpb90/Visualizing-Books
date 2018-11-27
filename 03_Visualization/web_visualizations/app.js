@@ -7,17 +7,20 @@ const pool = require('./server/dbs');
 const app = express();
 const port = 8000;
 
+app.use(express.static(path.join(__dirname, 'client/public')));
+app.use(express.static(path.join(__dirname, 'client/views')));
+
 app.set('view enging', 'pug');
 app.set('views', path.join(__dirname, 'client/views'));
 
 app.use('/', site);
 
 // Initialize the application once the database connections are ready
-pool.connect(function (err, client, done) {
-  if (err) console.log(err);
+pool.connect(function(err, client, done) {
+    if (err) console.log(err);
 
-  app.listen(port, function () {
-    console.log(`Listening on port ${port}`);
-  });
+    app.listen(port, function() {
+        console.log(`Listening on port ${port}`);
+    });
 
 });

@@ -1,0 +1,22 @@
+doctype html
+html(lang = 'en')
+    head
+        meta(charset = 'utf-8')
+        meta(http-equiv = 'x-ua-compatible' content = 'ie=edge')
+        meta(name = 'description' content='a project by David Pardo & Martijn de Heer')
+        meta(name = 'viewport' content = 'width=device-width, initial-scale=1')
+        link(rel = 'stylesheet' href='./stylesheets/main.css')
+        title Visualized Complexity of + booktitle
+    body
+        div(id = 'layout')
+            h1= booktitle
+            p A small introduction about whats going on should be written here.
+
+            div(id = 'wrapper')
+                each item in rows
+                    span(data-chapter=item.chapter data-pos=item.pos data-tokenid=item.token_id data-sentiment=item.sentiment data-sentimentbin=item.sentiment_bin data-freqchapter=item.freq_chapter data-topic=item.topic data-freqbook=item.freq_book )= item.word
+                    span &nbsp;
+
+        div(id = 'container')
+        script(src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js')
+        script(src = './scripts/main.js')
