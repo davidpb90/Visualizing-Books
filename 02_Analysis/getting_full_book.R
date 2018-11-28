@@ -25,14 +25,30 @@ titles <- c("The Critique of Pure Reason",
 #'Reads books by name
 books <- gutenberg_works(title %in% titles) %>%
   gutenberg_download(meta_fields = "title")
+
 new_books <- books %>%
-  mutate(line=row_number()) %>%
-  transform(text = strsplit(text,"(?=[[:space:]]+|[[:punct:]]+|[[:digit:]]+)",perl=TRUE)) %>%
-  unnest(text) %>%
+  mutate(line=row_number(),word = strsplit(text,"(?=[[:space:]]+|[[:punct:]]+|[[:digit:]]+)",perl=TRUE)) %>%
+  unnest(word) %>%
   mutate(id=row_number()) %>%
   group_by(line) %>%
   mutate(id_in_line=row_number()) %>%
   ungroup()
+
+
+sentiment_dict <- "nrc"
+sentiments_bin <- get_sentiments(sentiment_dict) %>%
+  filter(sentiment %in% c("negative","positive")) %>%
+  group_by(word) %>%
+  summarise(sentiment_bin = paste(sentiment, collapse = ","))
+sentiments <- get_sentiments(sentiment_dict) %>%
+  filter(!(sentiment %in% c("negative","positive"))) %>%
+  group_by(word) %>%
+  summarise(sentiment = paste(sentiment, collapse = ","))
+
+sentiment_books <- new_books %>%
+  left_join(sentiments_bin,c("word")) %>%
+  left_join(sentiments,c("word"))
+
 #https://www.r-bloggers.com/strsplit-but-keeping-the-delimiter/  lookahead regex
 #This regex allows to split every element of a sentence.
 strsplit(books[150,2][[1]],"(?=[[:space:]]+|[[:punct:]]+|[[:digit:]]+)",perl=TRUE)
