@@ -1,6 +1,6 @@
 
 #' Imports required libraries. Installs them if required
-packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","rstudioapi","gutenbergr","tm","topicmodels","tokenizers","RDRPOSTagger","ggplot2")
+packages <- c("readr", "devtools","stringr", "tidyr", "tidytext","devtools","dplyr","gutenbergr","tm","topicmodels","tokenizers","RDRPOSTagger","ggplot2","rstudioapi")
 for(i in packages) {
   if(!require(i,character.only = TRUE)) install.packages(i)
   library(i,character.only = TRUE)
