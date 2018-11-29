@@ -49,6 +49,8 @@ sentiment_books <- new_books %>%
   left_join(sentiments_bin,c("word")) %>%
   left_join(sentiments,c("word"))
 
+write.csv(sentiment_books %>% filter(gutenberg_id == 103),file = paste(getwd(),"/Books/","around_the_world_full",".csv",sep=""))
+
 #https://www.r-bloggers.com/strsplit-but-keeping-the-delimiter/  lookahead regex
 #This regex allows to split every element of a sentence.
 strsplit(books[150,2][[1]],"(?=[[:space:]]+|[[:punct:]]+|[[:digit:]]+)",perl=TRUE)
